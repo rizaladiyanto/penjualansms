@@ -40,6 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('/admin/categories', CategoryController::class)->except(['show'])->whereUuid('category');
     Route::resource('/admin/products', ProductController::class);
+    Route::post('/admin/produk/{id}',[ProductController::class,'update']);
     Route::resource('/admin/users', UserController::class)->except(['show']);
 
     Route::get('/admin', function () {

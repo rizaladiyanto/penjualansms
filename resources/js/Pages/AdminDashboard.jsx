@@ -84,7 +84,7 @@ export default function AdminDashboard() {
                 children={
                     <>
                         <Head title="Dashboard Admin" />
-                        <div className="max-w-screen-xl mx-auto p-6">
+                        <div className="max-w-screen-xl mx-auto p-5">
                             <div className="grid gap-20 md:grid-cols-2 lg:grid-cols-4">
                                 <Card className="bg-white flex flex-row w-60 h-16 text-sm justify-evenly rounded-md shadow">
                                     <div className="my-auto">

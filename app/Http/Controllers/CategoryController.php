@@ -14,14 +14,18 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $search = $request->get('search', '');
-        $categories = Category::where('name', 'like', "%$search%")
-            ->orderBy('created_at')
-            ->get();
+        $search = $request->query('search'); // Ambil nilai pencarian dari query string
+
+        $categories = Category::query()
+        ->when($search, function ($query, $search) {
+            return $query->where('name', 'like', "%{$search}%");
+        })
+        ->orderBy('name', 'asc')
+        ->get();
     
         return Inertia::render('Admin/ListCategory', [
             'categories' => $categories,
-            'filters' => $request->only(['search']),
+            'search' => $search,
             'success' => session('success'),
         ]);
     }

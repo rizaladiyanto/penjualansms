@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { Head, usePage, Link, useForm } from "@inertiajs/react";
+import { Head, usePage, Link, useForm, router } from "@inertiajs/react";
 import ReactPaginate from "react-paginate";
 import Swal from "sweetalert2";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaSearch } from "react-icons/fa";
 import {
     Card,
     CardContent,
@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/card";
 
 export default function Index() {
-    const { categories, filters, success } = usePage().props;
-    const [search, setSearch] = useState(filters.search || "");
+    const { categories, search, success } = usePage().props;
+    const [searchTerm, setSearchTerm] = useState(search || "");
     const [currentPage, setCurrentPage] = useState(0);
 
 
@@ -46,12 +46,6 @@ export default function Index() {
         name: "",
         parent_id: "",
     });
-
-    // Handle search form submit
-    const handleSearch = (e) => {
-        e.preventDefault();
-        window.location.href = route("categories.index", { search });
-    };
 
     // Handle page change for pagination
     const handlePageChange = ({ selected }) => {
@@ -92,6 +86,29 @@ export default function Index() {
             });
         }
     };
+
+    const handleDelete = (category) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route("categories.destroy", category.id), {
+                    onSuccess: () => {
+                        Swal.fire("Deleted!", "Category has been deleted.", "success");
+                    },
+                    onError: (errors) => {
+                        Swal.fire("Error!", "Failed to delete category.", "error");
+                    }
+                });
+            }
+        });
+    };
     
     
     const [showSuccessAlert, setShowSuccessAlert] = useState(true);
@@ -109,39 +126,41 @@ export default function Index() {
         }
     }, [success, showSuccessAlert]);
 
+    // Handle perubahan input pencarian
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            router.get(route("categories.index"), { search: searchTerm }, { preserveState: true });
+        }, 500); // Delay 500ms untuk debounce
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm]);
 
     console.log(categories);
 
     return (
         <AdminLayout header={<h1>Categories</h1>}>
             <Head title="Categories - Admin" />
-
             <div className="max-w-screen-xl mx-auto p-6">
              <div className="flex justify-between items-center mb-4">
                     {/* Add Button */}
                     <button
                         onClick={openAddModal}
-                        className="w-20 h-6 flex items-center bg-blue-500 text-white px-4 py-2 rounded-md shadow hover:bg-blue-600 mb-4"
+                        className="w-20 h-6 flex items-center bg-blue-500 text-white px-4 py-2 rounded-md shadow hover:bg-blue-600"
                     >
                         <FaPlus className="mr-2" />
                         Add
                     </button>
                     {/* Search Bar */}
-                    <form onSubmit={handleSearch} className="flex space-x-2 items-center">
+                    <div className="relative">
                         <input
                             type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search categories..."
-                            className="border px-4 py-2 rounded-md w-72"
+                            className="border px-4 py-2 rounded-md w-64 pl-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <button
-                            type="submit"
-                            className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                        >
-                            Search
-                        </button>
-                    </form>
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                    </div>
                 </div>
                 {/* Table */}
                 <Card className="mt-4">
@@ -169,23 +188,16 @@ export default function Index() {
                                                 <div className="flex space-x-2">
                                                     <button
                                                         onClick={() => openEditModal(category)}
-                                                        className="h-6 flex items-center bg-green-500 text-white px-4 py-2 rounded-md shadow hover:bg-green-600"
+                                                        className="bg-green-500 text-white px-4 py-2 rounded-md shadow hover:bg-green-600"
                                                     >
                                                         Edit
                                                     </button>
-                                                    <Link
-                                                        href={route("categories.destroy", category.id)}
-                                                        method="delete"
-                                                        as="button"
-                                                        className="h-6 flex items-center bg-red-500 text-white px-4 py-2 rounded-md shadow hover:bg-red-600"
-                                                        onClick={(e) => {
-                                                            if (!confirm("Are you sure you want to delete this category?")) {
-                                                                e.preventDefault();
-                                                            }
-                                                        }}
+                                                    <button
+                                                        onClick={() => handleDelete(category)}
+                                                        className="bg-red-500 text-white px-4 py-2 rounded-md shadow hover:bg-red-800"
                                                     >
                                                         Delete
-                                                    </Link>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
